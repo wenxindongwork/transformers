@@ -3640,6 +3640,8 @@ class PreTrainedModel(nn.Module, ModuleUtilsMixin, GenerationMixin, PushToHubMix
         else:
             resolved_archive_file = None
 
+        print("wenxin. is_sharded = ", is_sharded)
+        
         # We'll need to download and cache each checkpoint shard if the checkpoint is sharded.
         if is_sharded:
             # resolved_archive_file becomes a list of files that point to the different checkpoint shards in this case.
@@ -3657,6 +3659,7 @@ class PreTrainedModel(nn.Module, ModuleUtilsMixin, GenerationMixin, PushToHubMix
                 subfolder=subfolder,
                 _commit_hash=commit_hash,
             )
+            print("wenxin: shared_metadata =", sharded_metadata)
 
         if (
             is_safetensors_available()
@@ -3747,7 +3750,7 @@ class PreTrainedModel(nn.Module, ModuleUtilsMixin, GenerationMixin, PushToHubMix
 
         if is_deepspeed_zero3_enabled() and not is_quantized:
             import deepspeed
-
+            print("wenxin: is_deepspeed_zero3_enabled = true")
             logger.info("Detected DeepSpeed ZeRO-3: activating zero.init() for this model")
             init_contexts = [deepspeed.zero.Init(config_dict_or_path=deepspeed_config())] + init_contexts
         elif low_cpu_mem_usage:
@@ -3757,11 +3760,16 @@ class PreTrainedModel(nn.Module, ModuleUtilsMixin, GenerationMixin, PushToHubMix
         config = cls._autoset_attn_implementation(
             config, use_flash_attention_2=use_flash_attention_2, torch_dtype=torch_dtype, device_map=device_map
         )
-
+        
         with ContextManagers(init_contexts):
             # Let's make sure we don't run the init function of buffer modules
+            print("entered ContextManager. init_contexts=", init_contexts)
+            print("wenxin: cls = ",cls)
+            print("wenxin: device_map = ", device_map)
+
             model = cls(config, *model_args, **model_kwargs)
 
+        print("out of context manager")
         # make sure we use the model's config since the __init__ call might have copied it
         config = model.config
 
@@ -3783,7 +3791,7 @@ class PreTrainedModel(nn.Module, ModuleUtilsMixin, GenerationMixin, PushToHubMix
             # Note that once you have loaded a quantized model, you can't change its dtype so this will
             # remain a single source of truth
             config._pre_quantization_dtype = torch_dtype
-
+        
         if isinstance(device_map, str):
             special_dtypes = {}
 
