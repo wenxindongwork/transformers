@@ -1074,6 +1074,7 @@ def get_checkpoint_shard_files(
     )
     show_progress_bar = last_shard is None or force_download
     for shard_filename in tqdm(shard_filenames, desc="Downloading shards", disable=not show_progress_bar):
+        print("wenxin: downloading shard ", shard_filename)
         try:
             # Load from URL
             cached_filename = cached_file(
