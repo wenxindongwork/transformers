@@ -3149,6 +3149,7 @@ class PreTrainedModel(nn.Module, ModuleUtilsMixin, GenerationMixin, PushToHubMix
 
         if is_fsdp_enabled():
             low_cpu_mem_usage = True
+        print("wenxin: is_fsdp_enabled =", is_fsdp_enabled())
 
         if use_auth_token is not None:
             warnings.warn(
@@ -3608,6 +3609,7 @@ class PreTrainedModel(nn.Module, ModuleUtilsMixin, GenerationMixin, PushToHubMix
             else:
                 logger.info(f"loading weights file {filename} from cache at {resolved_archive_file}")
         elif gguf_file:
+            print("wenxin: gguf_file = true")
             from .modeling_gguf_pytorch_utils import load_gguf_checkpoint
 
             # Case 1: the GGUF file is present locally
