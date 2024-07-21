@@ -1052,6 +1052,7 @@ def get_checkpoint_shard_files(
     if not os.path.isfile(index_filename):
         raise ValueError(f"Can't find a checkpoint index ({index_filename}) in {pretrained_model_name_or_path}.")
 
+    print("wenxin: index_filename", index_filename)
     with open(index_filename, "r") as f:
         index = json.loads(f.read())
 
@@ -1072,6 +1073,7 @@ def get_checkpoint_shard_files(
     last_shard = try_to_load_from_cache(
         pretrained_model_name_or_path, shard_filenames[-1], cache_dir=cache_dir, revision=_commit_hash
     )
+    
     show_progress_bar = last_shard is None or force_download
     for shard_filename in tqdm(shard_filenames, desc="Downloading shards", disable=not show_progress_bar):
         print("wenxin: downloading shard ", shard_filename)

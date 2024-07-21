@@ -3661,7 +3661,7 @@ class PreTrainedModel(nn.Module, ModuleUtilsMixin, GenerationMixin, PushToHubMix
                 subfolder=subfolder,
                 _commit_hash=commit_hash,
             )
-            # print("wenxin: shared_metadata =", sharded_metadata)
+            print("wenxin: get_checkpoint_shard_files() done")
 
         if (
             is_safetensors_available()
