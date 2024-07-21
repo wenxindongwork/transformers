@@ -1055,8 +1055,10 @@ def get_checkpoint_shard_files(
     print("wenxin: index_filename", index_filename)
     with open(index_filename, "r") as f:
         index = json.loads(f.read())
+        print("index:", index)
 
     shard_filenames = sorted(set(index["weight_map"].values()))
+    print("shard_filenames: ", shard_filenames)
     sharded_metadata = index["metadata"]
     sharded_metadata["all_checkpoint_keys"] = list(index["weight_map"].keys())
     sharded_metadata["weight_map"] = index["weight_map"].copy()
@@ -1064,6 +1066,7 @@ def get_checkpoint_shard_files(
     # First, let's deal with local folder.
     if os.path.isdir(pretrained_model_name_or_path):
         shard_filenames = [os.path.join(pretrained_model_name_or_path, subfolder, f) for f in shard_filenames]
+        print("wenxin: should not be here")
         return shard_filenames, sharded_metadata
 
     # At this stage pretrained_model_name_or_path is a model identifier on the Hub
@@ -1072,9 +1075,11 @@ def get_checkpoint_shard_files(
     # downloaded (if interrupted).
     last_shard = try_to_load_from_cache(
         pretrained_model_name_or_path, shard_filenames[-1], cache_dir=cache_dir, revision=_commit_hash
-    )
-    
+    )  
+    print("wenxin: last_shard", last_shard)
+
     show_progress_bar = last_shard is None or force_download
+    print("wenxin: entering for loop")
     for shard_filename in tqdm(shard_filenames, desc="Downloading shards", disable=not show_progress_bar):
         print("wenxin: downloading shard ", shard_filename)
         try:
