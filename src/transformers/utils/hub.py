@@ -1078,7 +1078,7 @@ def get_checkpoint_shard_files(
     )  
     print("wenxin: last_shard", last_shard)
 
-    show_progress_bar = last_shard is None or force_download
+    show_progress_bar = False # last_shard is None or force_download
     print("wenxin: entering for loop")
     for shard_filename in tqdm(shard_filenames, desc="Downloading shards", disable=not show_progress_bar):
         print("wenxin: downloading shard ", shard_filename)
