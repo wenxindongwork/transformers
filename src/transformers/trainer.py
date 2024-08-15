@@ -34,7 +34,8 @@ import warnings
 from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
-
+from torch.profiler import profile, record_function, ProfilerActivity
+import torch_xla.debug.profiler as xp
 
 # Integrations must be imported before ML frameworks:
 # isort: off
@@ -238,6 +239,11 @@ if is_accelerate_available():
 if is_accelerate_available("0.28.0"):
     from accelerate.utils import DataLoaderConfiguration
 
+profile_step = int(os.environ.get('PROFILE_STEP', -1))
+profile_epoch = int(os.environ.get('PROFILE_EPOCH', -1))
+profile_duration = int(os.environ.get('PROFILE_DURATION_MS', 100000))
+profile_logdir = os.environ.get('PROFILE_LOGDIR', None)
+mark_step_before_opt = os.environ.get("MARK_STEP_BEFORE_OPT", "False").lower() == "true"
 
 def _is_peft_model(model):
     if is_peft_available():
@@ -2145,6 +2151,9 @@ class Trainer:
         grad_norm: Optional[float] = None
 
         self.control = self.callback_handler.on_train_begin(args, self.state, self.control)
+        
+        server = xp.start_server(9012)
+        logger.info(f'Profiling server started: {str(server)}')
 
         total_batched_samples = 0
         for epoch in range(epochs_trained, num_train_epochs):
@@ -2177,6 +2186,8 @@ class Trainer:
             step = -1
             for step, inputs in enumerate(epoch_iterator):
                 total_batched_samples += 1
+                if step == profile_step and epoch == profile_epoch:
+                    xp.trace_detached('127.0.0.1:9012', profile_logdir, profile_duration or 20000)
 
                 if self.args.include_num_input_tokens_seen:
                     main_input_name = getattr(self.model, "main_input_name", "input_ids")
@@ -2243,7 +2254,7 @@ class Trainer:
                 ):
                     # the `or` condition of `is_last_step_and_steps_less_than_grad_acc` is not covered
                     # in accelerate. So, explicitly enable sync gradients to True in that case.
-                    if is_last_step_and_steps_less_than_grad_acc:
+                    if is_last_step_and_steps_less_than_grad_acc or (mark_step_before_opt and is_torch_xla_available()):
                         self.accelerator.gradient_state._set_sync_gradients(True)
 
                     # Gradient clipping
